@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using PoGo.NecroBot.Logic.State;
 
 #endregion
 
@@ -109,7 +110,11 @@ namespace PoGo.NecroBot.Logic.Common
         RequireInputText,
         GoogleTwoFactorAuth,
         GoogleTwoFactorAuthExplanation,
-        GoogleError
+        GoogleError,
+        MissingCredentialsGoogle,
+        MissingCredentialsPtc,
+        SnipeScan,
+        NoPokemonToSnipe
     }
 
     public class Translation : ITranslation
@@ -225,7 +230,11 @@ namespace PoGo.NecroBot.Logic.Common
             new KeyValuePair<TranslationString, string>(Common.TranslationString.RequireInputText, "Program will continue after the key press..."),
             new KeyValuePair<TranslationString, string>(Common.TranslationString.GoogleTwoFactorAuth, "As you have Google Two Factor Auth enabled, you will need to insert an App Specific Password into the auth.json"),
             new KeyValuePair<TranslationString, string>(Common.TranslationString.GoogleTwoFactorAuthExplanation, "Opening Google App-Passwords. Please make a new App Password (use Other as Device)"),
-            new KeyValuePair<TranslationString, string>(Common.TranslationString.GoogleError, "Make sure you have entered the right Email & Password.")
+            new KeyValuePair<TranslationString, string>(Common.TranslationString.GoogleError, "Make sure you have entered the right Email & Password."),
+            new KeyValuePair<TranslationString, string>(Common.TranslationString.MissingCredentialsGoogle, "You need to fill out GoogleUsername and GooglePassword in auth.json!"),
+            new KeyValuePair<TranslationString, string>(Common.TranslationString.MissingCredentialsPtc, "You need to fill out PtcUsername and PtcPassword in auth.json!"),
+            new KeyValuePair<TranslationString, string>(Common.TranslationString.SnipeScan, "[Sniper] Scanning for Snipeable Pokemon at {0}..."),
+            new KeyValuePair<TranslationString, string>(Common.TranslationString.NoPokemonToSnipe, "[Sniper] No Pokemon found to snipe!"),
         };
 
         public string GetTranslation(TranslationString translationString, params object[] data)
@@ -241,13 +250,11 @@ namespace PoGo.NecroBot.Logic.Common
             var translation = TranslationStrings.FirstOrDefault(t => t.Key.Equals(translationString)).Value;
             return translation != default(string) ? translation : $"Translation for {translationString} is missing";
         }
-
-        public static Translation Load(string translationsLanguageCode)
+        public static Translation Load(ILogicSettings logicSettings)
         {
-            string profilePath = Directory.GetCurrentDirectory();
-            string configPath = Path.Combine(profilePath, "config", "translations");
-
-            var fullPath = Path.Combine(configPath, "translation." + translationsLanguageCode + ".json");
+            string translationsLanguageCode = logicSettings.TranslationLanguageCode;
+            var translationPath = Path.Combine(logicSettings.GeneralConfigPath, "translations");
+            var fullPath = Path.Combine(translationPath, "translation." + translationsLanguageCode + ".json");
 
             Translation translations;
             if (File.Exists(fullPath))
@@ -265,7 +272,7 @@ namespace PoGo.NecroBot.Logic.Common
             else
             {
                 translations = new Translation();
-                translations.Save(Path.Combine(configPath, "translation.en.json"));
+                translations.Save(Path.Combine(translationPath, "translation.en.json"));
             }
             return translations;
         }

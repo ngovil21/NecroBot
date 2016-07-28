@@ -29,16 +29,18 @@ namespace PoGo.NecroBot.CLI
             Logger.SetLogger(new ConsoleLogger(LogLevel.Info), subPath);
 
             var settings = GlobalSettings.Load(subPath);
+           
 
             if (settings == null)
             {
                 Logger.Write("This is your first start and the bot has generated the default config!", LogLevel.Warning);
                 Logger.Write("We will now shutdown to let you configure the bot and then launch it again.", LogLevel.Warning);
+                Thread.Sleep(2000);
                 Environment.Exit(0);
                 return;
             }
-
             var session = new Session(new ClientSettings(settings), new LogicSettings(settings));
+
 
             /*SimpleSession session = new SimpleSession
             {

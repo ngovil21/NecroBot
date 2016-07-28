@@ -15,7 +15,11 @@ namespace PoGo.NecroBot.Logic.State
     {
         public async Task<IState> Execute(ISession session)
         {
-            session.EventDispatcher.Send(new NoticeEvent { Message = session.Translation.GetTranslation(Common.TranslationString.LoggingIn, session.Settings.AuthType) });
+            session.EventDispatcher.Send(new NoticeEvent
+            {
+                Message = session.Translation.GetTranslation(TranslationString.LoggingIn, session.Settings.AuthType)
+            });
+            await CheckLogin(session);
             try
             {
                 switch (session.Settings.AuthType)
@@ -34,7 +38,7 @@ namespace PoGo.NecroBot.Logic.State
                         await session.Client.Login.DoGoogleLogin();
                         break;
                     default:
-                        session.EventDispatcher.Send(new ErrorEvent {Message = session.Translation.GetTranslation(Common.TranslationString.WrongAuthType)});
+                        session.EventDispatcher.Send(new ErrorEvent { Message = session.Translation.GetTranslation(Common.TranslationString.WrongAuthType) });
                         return null;
                 }
             }
@@ -44,13 +48,14 @@ namespace PoGo.NecroBot.Logic.State
                 {
                     Message = session.Translation.GetTranslation(TranslationString.PtcOffline)
                 });
-                session.EventDispatcher.Send(new NoticeEvent {Message = session.Translation.GetTranslation(TranslationString.TryingAgainIn, 20)});
+                session.EventDispatcher.Send(new NoticeEvent { Message = session.Translation.GetTranslation(TranslationString.TryingAgainIn, 20) });
                 await Task.Delay(20000);
                 return this;
             }
             catch (AccountNotVerifiedException)
             {
-                session.EventDispatcher.Send(new ErrorEvent {Message = session.Translation.GetTranslation(TranslationString.AccountNotVerified)});
+                session.EventDispatcher.Send(new ErrorEvent { Message = session.Translation.GetTranslation(TranslationString.AccountNotVerified) });
+                await Task.Delay(2000);
                 Environment.Exit(0);
             }
             catch (GoogleException e)
@@ -70,13 +75,38 @@ namespace PoGo.NecroBot.Logic.State
                         throw;
                     }
                 }
-                session.EventDispatcher.Send(new ErrorEvent {Message = session.Translation.GetTranslation(TranslationString.GoogleError)});
+                session.EventDispatcher.Send(new ErrorEvent { Message = session.Translation.GetTranslation(TranslationString.GoogleError) });
+                await Task.Delay(2000);
                 Environment.Exit(0);
             }
 
             await DownloadProfile(session);
 
             return new PositionCheckState();
+        }
+
+        private static async Task CheckLogin(ISession session)
+        {
+            if (session.Settings.AuthType == AuthType.Google &&
+                            (session.Settings.GoogleUsername == null || session.Settings.GooglePassword == null))
+            {
+                session.EventDispatcher.Send(new ErrorEvent
+                {
+                    Message = session.Translation.GetTranslation(TranslationString.MissingCredentialsGoogle)
+                });
+                await Task.Delay(2000);
+                Environment.Exit(0);
+            }
+            else if (session.Settings.AuthType == AuthType.Ptc &&
+                     (session.Settings.PtcUsername == null || session.Settings.PtcPassword == null))
+            {
+                session.EventDispatcher.Send(new ErrorEvent
+                {
+                    Message = session.Translation.GetTranslation(TranslationString.MissingCredentialsPtc)
+                });
+                await Task.Delay(2000);
+                Environment.Exit(0);
+            }
         }
 
         public async Task DownloadProfile(ISession session)
