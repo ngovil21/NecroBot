@@ -23,7 +23,7 @@ namespace PoGo.NecroBot.Logic.State
                     case AuthType.Ptc:
                         try
                         {
-                            await session.Client.Login.DoPtcLogin(session.Settings.PtcUsername, session.Settings.PtcPassword);
+                            await session.Client.Login.DoPtcLogin();
                         }
                         catch (AggregateException ae)
                         {
@@ -31,7 +31,7 @@ namespace PoGo.NecroBot.Logic.State
                         }
                         break;
                     case AuthType.Google:
-                        await session.Client.Login.DoGoogleLogin(session.Settings.GoogleUsername, session.Settings.GooglePassword);
+                        await session.Client.Login.DoGoogleLogin();
                         break;
                     default:
                         session.EventDispatcher.Send(new ErrorEvent {Message = session.Translation.GetTranslation(Common.TranslationString.WrongAuthType)});
