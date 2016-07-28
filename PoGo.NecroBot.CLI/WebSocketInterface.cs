@@ -1,6 +1,7 @@
 ﻿#region using directives
 
 using Newtonsoft.Json;
+using PoGo.NecroBot.Logic.Common;
 using PoGo.NecroBot.Logic.Event;
 using PoGo.NecroBot.Logic.Logging;
 using PoGo.NecroBot.Logic.State;
@@ -18,7 +19,7 @@ namespace PoGo.NecroBot.CLI
         private ProfileEvent _lastProfile;
         private readonly WebSocketServer _server;
 
-        public WebSocketInterface(int port)
+        public WebSocketInterface(int port, ITranslation translations)
         {
             _server = new WebSocketServer();
             var setupComplete = _server.Setup(new ServerConfig
@@ -37,7 +38,7 @@ namespace PoGo.NecroBot.CLI
 
             if (setupComplete == false)
             {
-                Logger.Write($"Failed to start WebSocketServer on port : {port}", LogLevel.Error);
+                Logger.Write(translations.GetTranslation(TranslationString.WebSocketFailStart, port), LogLevel.Error);
                 return;
             }
 
@@ -85,7 +86,7 @@ namespace PoGo.NecroBot.CLI
                 session.Send(Serialize(_lastPokeStopList));
         }
 
-        public void Listen(IEvent evt, Context ctx)
+        public void Listen(IEvent evt, Session session)
         {
             dynamic eve = evt;
 
