@@ -108,6 +108,7 @@ namespace PoGo.NecroBot.CLI
         public bool KeepPokemonsThatCanEvolve = false;
         public bool PrioritizeIvOverCp = true;
         public bool RenameAboveIv = true;
+        public string RenameTemplate = "{0}_{1}";
         public bool TransferDuplicatePokemon = true;
         public string TranslationLanguageCode = "en";
         public bool UsePokemonToNotCatchFilter = false;
@@ -251,11 +252,18 @@ namespace PoGo.NecroBot.CLI
         {
             Locations = new List<Location>
             {
-                new Location(38.55680748646112, -121.2383794784546)
+                new Location(38.55680748646112, -121.2383794784546), //Dratini Spot
+                new Location(-33.85901900, 151.21309800), //Magikarp Spot
+                new Location(47.5014969, -122.0959568), //Eevee Spot
+                new Location(51.5025343,-0.2055027) //Charmender Spot
+
             },
             Pokemon = new List<string>()
             {
-                PokemonId.Dratini.ToString()
+                PokemonId.Dratini.ToString(),
+                PokemonId.Magikarp.ToString(),
+                PokemonId.Eevee.ToString(),
+                PokemonId.Charmander.ToString()
             }
         };
 
@@ -295,6 +303,11 @@ namespace PoGo.NecroBot.CLI
                 settings.PokemonToSnipe = Default.PokemonToSnipe;
             }
 
+            if(settings.RenameTemplate == null)
+            {
+                settings.RenameTemplate = Default.RenameTemplate;
+            }
+
             settings.ProfilePath = profilePath;
             settings.ProfileConfigPath = profileConfigPath;
             settings.GeneralConfigPath = Path.Combine(Directory.GetCurrentDirectory(), "config");
@@ -302,10 +315,12 @@ namespace PoGo.NecroBot.CLI
             var firstRun = !File.Exists(configFile);
 
             settings.Save(configFile);
-
-            if (firstRun) return null;
-
             settings.Auth.Load(Path.Combine(profileConfigPath, "auth.json"));
+
+            if (firstRun)
+            {
+                return null;
+            }
 
             return settings;
         }
@@ -485,6 +500,7 @@ namespace PoGo.NecroBot.CLI
         public bool EvolveAllPokemonAboveIv => _settings.EvolveAllPokemonAboveIv;
         public float EvolveAboveIvValue => _settings.EvolveAboveIvValue;
         public bool RenameAboveIv => _settings.RenameAboveIv;
+        public string RenameTemplate => _settings.RenameTemplate;
         public int AmountOfPokemonToDisplayOnStart => _settings.AmountOfPokemonToDisplayOnStart;
         public bool DumpPokemonStats => _settings.DumpPokemonStats;
         public string TranslationLanguageCode => _settings.TranslationLanguageCode;

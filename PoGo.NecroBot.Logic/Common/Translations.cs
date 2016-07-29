@@ -114,12 +114,17 @@ namespace PoGo.NecroBot.Logic.Common
         MissingCredentialsGoogle,
         MissingCredentialsPtc,
         SnipeScan,
-        NoPokemonToSnipe
+        NoPokemonToSnipe,
     }
 
     public class Translation : ITranslation
     {
-        //Default Translations (ENGLISH)
+        [JsonProperty("TranslationStrings", 
+            ItemTypeNameHandling = TypeNameHandling.Arrays, 
+            ItemConverterType = typeof(KeyValuePairConverter),
+            ObjectCreationHandling = ObjectCreationHandling.Replace,
+            DefaultValueHandling = DefaultValueHandling.Populate)]
+        //Default Translations (ENGLISH)        
         private List<KeyValuePair<TranslationString, string>> TranslationStrings = new List
             <KeyValuePair<TranslationString, string>>
         {
@@ -265,9 +270,11 @@ namespace PoGo.NecroBot.Logic.Common
                 jsonSettings.Converters.Add(new StringEnumConverter {CamelCaseText = true});
                 jsonSettings.ObjectCreationHandling = ObjectCreationHandling.Replace;
                 jsonSettings.DefaultValueHandling = DefaultValueHandling.Populate;
-
                 translations = JsonConvert.DeserializeObject<Translation>(input, jsonSettings);
-                translations.Save(fullPath);
+                //TODO make json to fill default values as it won't do it now
+                new Translation().TranslationStrings.Where(item => !translations.TranslationStrings.Any(a => a.Key == item.Key))
+                    .ToList()
+                    .ForEach(translations.TranslationStrings.Add);
             }
             else
             {
