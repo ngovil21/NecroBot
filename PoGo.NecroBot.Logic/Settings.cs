@@ -10,6 +10,9 @@ using PokemonGo.RocketAPI;
 using PokemonGo.RocketAPI.Enums;
 using POGOProtos.Enums;
 using POGOProtos.Inventory.Item;
+using System.ComponentModel;
+using System.Reflection;
+using System.Collections;
 
 #endregion
 
@@ -22,8 +25,8 @@ namespace PoGo.NecroBot.Logic
         public AuthType AuthType;
         public string GoogleUsername;
         public string GooglePassword;
-        public string PtcPassword;
         public string PtcUsername;
+        public string PtcPassword;
 
         public void Load(string path)
         {
@@ -134,6 +137,7 @@ namespace PoGo.NecroBot.Logic
         public bool EvolveAllPokemonAboveIv = false;
         public bool EvolveAllPokemonWithEnoughCandy = true;
         public bool KeepPokemonsThatCanEvolve = false;
+        public double EvolveKeptPokemonsAtStorageUsagePercentage = 0.90;
         //gpx
         public bool UseGpxPathing = false;
         public string GpxFile = "GPXPath.GPX";
@@ -147,10 +151,10 @@ namespace PoGo.NecroBot.Logic
         public bool PrioritizeIvOverCp = false;
         //luckyandincense
         public bool UseEggIncubators = true;
-        public bool UseLuckyEggConstantly = true;
+        public bool UseLuckyEggConstantly = false;
         public int UseLuckyEggsMinPokemonAmount = 30;
         public bool UseLuckyEggsWhileEvolving = false;
-        public bool UseIncenseConstantly = true;
+        public bool UseIncenseConstantly = false;
         //snipe
         public bool UseSnipeOnlineLocationServer = true;
         public bool UseSnipeLocationServer = false;
@@ -174,13 +178,13 @@ namespace PoGo.NecroBot.Logic
         public int TotalAmountOfPotionsToKeep = 80;
         public int TotalAmountOfRevivesToKeep = 60;
         //balls
-        public int UseGreatBallAboveCp = 750;
-        public int UseUltraBallAboveCp = 1000;
+        public int UseGreatBallAboveCp = 1000;
+        public int UseUltraBallAboveCp = 1250;
         public int UseMasterBallAboveCp = 1500;
-        public int UseGreatBallAboveIv = 80;
+        public int UseGreatBallAboveIv = 85;
         public int UseUltraBallAboveIv = 90;
-        public double UseGreatBallBelowCatchProbability = 0.5;
-        public double UseUltraBallBelowCatchProbability = 0.4;
+        public double UseGreatBallBelowCatchProbability = 0.3;
+        public double UseUltraBallBelowCatchProbability = 0.2;
         public double UseMasterBallBelowCatchProbability = 0.05;
         //transfer
         public bool TransferDuplicatePokemon = true;
@@ -240,18 +244,18 @@ namespace PoGo.NecroBot.Logic
             //PokemonId.Kangaskhan,
             //PokemonId.MrMime,
             //PokemonId.Tauros,
-            //PokemonId.Gyarados,
+            PokemonId.Gyarados,
             //PokemonId.Lapras,
             PokemonId.Ditto,
             //PokemonId.Vaporeon,
             //PokemonId.Jolteon,
             //PokemonId.Flareon,
             //PokemonId.Porygon,
-            //PokemonId.Snorlax,
+            PokemonId.Snorlax,
             PokemonId.Articuno,
             PokemonId.Zapdos,
             PokemonId.Moltres,
-            //PokemonId.Dragonite,
+            PokemonId.Dragonite,
             PokemonId.Mewtwo,
             PokemonId.Mew
         };
@@ -383,7 +387,6 @@ namespace PoGo.NecroBot.Logic
                 PokemonId.Scyther,
                 PokemonId.Magmar,
                 PokemonId.Electabuzz,
-                PokemonId.Magmar,
                 PokemonId.Jynx,
                 PokemonId.Gyarados,
                 PokemonId.Lapras,
@@ -437,6 +440,27 @@ namespace PoGo.NecroBot.Logic
                     jsonSettings.DefaultValueHandling = DefaultValueHandling.Populate;
 
                     settings = JsonConvert.DeserializeObject<GlobalSettings>(input, jsonSettings);
+
+                    // One day we might be able to better do this so its automatic
+                    /*
+                    FieldInfo[] fi = typeof(GlobalSettings).GetFields(BindingFlags.Public | BindingFlags.Instance);
+                    foreach (FieldInfo info in fi)
+                    {
+                        if (info.GetValue(Default) is int || info.GetValue(Default) is bool ||
+                            info.GetValue(Default) is float)
+                        {
+                            
+                        }
+                        if (info.GetValue(Default) is double)
+                        {
+                            Logger.Write($"{info.Name}={info.GetValue(Default)}", LogLevel.Error);
+
+                            Type type = settings.GetType();
+                            PropertyInfo propertyInfo = type.GetProperty(info.Name, BindingFlags.Instance | BindingFlags.Public);
+                            propertyInfo.SetValue(settings, info.GetValue(Default));
+                        }
+                    }
+                    */
                 }
                 catch (JsonReaderException exception)
                 {
@@ -447,6 +471,21 @@ namespace PoGo.NecroBot.Logic
             else
             {
                 settings = new GlobalSettings();
+            }
+
+            if (settings.DefaultAltitude == 0)
+            {
+                settings.DefaultAltitude = Default.DefaultAltitude;
+            }
+
+            if (settings.DefaultLatitude == 0)
+            {
+                settings.DefaultLatitude = Default.DefaultLatitude;
+            }
+
+            if (settings.DefaultLongitude == 0)
+            {
+                settings.DefaultLongitude = Default.DefaultLongitude;
             }
 
             if (settings.WebSocketPort == 0)
@@ -469,6 +508,26 @@ namespace PoGo.NecroBot.Logic
                 settings.SnipeLocationServer = Default.SnipeLocationServer;
             }
 
+            if (settings.SnipingScanOffset <= 0)
+            {
+                settings.SnipingScanOffset = Default.SnipingScanOffset;
+            }
+
+            if (settings.RecycleInventoryAtUsagePercentage <= 0)
+            {
+                settings.RecycleInventoryAtUsagePercentage = Default.RecycleInventoryAtUsagePercentage;
+            }
+
+            if (settings.WalkingSpeedInKilometerPerHour <= 0)
+            {
+                settings.WalkingSpeedInKilometerPerHour = Default.WalkingSpeedInKilometerPerHour;
+            }
+
+            if (settings.EvolveKeptPokemonsAtStorageUsagePercentage <= 0)
+            {
+                settings.EvolveKeptPokemonsAtStorageUsagePercentage = Default.EvolveKeptPokemonsAtStorageUsagePercentage;
+            }
+            
             settings.ProfilePath = profilePath;
             settings.ProfileConfigPath = profileConfigPath;
             settings.GeneralConfigPath = Path.Combine(Directory.GetCurrentDirectory(), "config");
@@ -483,8 +542,14 @@ namespace PoGo.NecroBot.Logic
 
         public void Save(string fullPath)
         {
-            var output = JsonConvert.SerializeObject(this, Formatting.Indented,
-                new StringEnumConverter {CamelCaseText = true});
+            var jsonSerializeSettings = new JsonSerializerSettings
+            {
+                DefaultValueHandling = DefaultValueHandling.Include,
+                Formatting = Formatting.Indented,
+                Converters = new JsonConverter[] { new StringEnumConverter { CamelCaseText = true } }
+            };
+
+            var output = JsonConvert.SerializeObject(this, jsonSerializeSettings);
 
             var folder = Path.GetDirectoryName(fullPath);
             if (folder != null && !Directory.Exists(folder))
@@ -551,21 +616,7 @@ namespace PoGo.NecroBot.Logic
 
             set { _settings.DefaultAltitude = value; }
         }
-
-        string ISettings.PtcPassword
-        {
-            get { return _settings.Auth.PtcPassword; }
-
-            set { _settings.Auth.PtcPassword = value; }
-        }
-
-        string ISettings.PtcUsername
-        {
-            get { return _settings.Auth.PtcUsername; }
-
-            set { _settings.Auth.PtcUsername = value; }
-        }
-
+        
         string ISettings.GoogleUsername
         {
             get { return _settings.Auth.GoogleUsername; }
@@ -578,6 +629,20 @@ namespace PoGo.NecroBot.Logic
             get { return _settings.Auth.GooglePassword; }
 
             set { _settings.Auth.GooglePassword = value; }
+        }
+        
+        string ISettings.PtcUsername
+        {
+            get { return _settings.Auth.PtcUsername; }
+
+            set { _settings.Auth.PtcUsername = value; }
+        }
+        
+        string ISettings.PtcPassword
+        {
+            get { return _settings.Auth.PtcPassword; }
+
+            set { _settings.Auth.PtcPassword = value; }
         }
     }
 
@@ -643,6 +708,7 @@ namespace PoGo.NecroBot.Logic
         public bool ShowPokeballCountsBeforeRecycle => _settings.ShowPokeballCountsBeforeRecycle;
         public bool VerboseRecycling => _settings.VerboseRecycling;
         public double RecycleInventoryAtUsagePercentage => _settings.RecycleInventoryAtUsagePercentage;
+        public double EvolveKeptPokemonsAtStorageUsagePercentage => _settings.EvolveKeptPokemonsAtStorageUsagePercentage;
         public ICollection<KeyValuePair<ItemId, int>> ItemRecycleFilter => _settings.ItemRecycleFilter;
         public ICollection<PokemonId> PokemonsToEvolve => _settings.PokemonsToEvolve;
         public ICollection<PokemonId> PokemonsNotToTransfer => _settings.PokemonsNotToTransfer;
@@ -664,7 +730,7 @@ namespace PoGo.NecroBot.Logic
         public bool SnipeIgnoreUnknownIv => _settings.SnipeIgnoreUnknownIv;
         public int MinDelayBetweenSnipes => _settings.MinDelayBetweenSnipes;
         public double SnipingScanOffset => _settings.SnipingScanOffset;
-        public int TotalAmountOfPokebalsToKeep => _settings.TotalAmountOfPokebalsToKeep;
+        public int TotalAmountOfPokeballsToKeep => _settings.TotalAmountOfPokebalsToKeep;
         public int TotalAmountOfPotionsToKeep => _settings.TotalAmountOfPotionsToKeep;
         public int TotalAmountOfRevivesToKeep => _settings.TotalAmountOfRevivesToKeep;
     }

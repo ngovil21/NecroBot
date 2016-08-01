@@ -107,6 +107,14 @@
       "Value": "Keine Pokébälle mehr! - Wir haben ein {0} mit {1} WP verpasst!"
     },
     {
+      "Key": "eventUseBerry",
+      "Value": "{0} benutzt, {1} verbleibend"
+    },
+    {
+      "Key": "itemRazzBerry",
+      "Value": "Himmihbeere"
+    },
+    {
       "Key": "catchStatusAttempt",
       "Value": "{0} Versuch #{1}"
     },
@@ -240,11 +248,11 @@
     },
     {
       "Key": "notRealisticTravel",
-      "Value": "Keine realistische Bewegung bei {0}, benutze zuletzt gespeicherte Daten aus Coords.ini"
+      "Value": "Keine realistische Bewegung bei {0}, benutze zuletzt gespeicherte Daten aus LastPos.ini"
     },
     {
       "Key": "coordinatesAreInvalid",
-      "Value": "Koordinaten in \"Coords.ini\" sind ungültig! Benutze standart Koordinaten."
+      "Value": "Koordinaten in \"LastPos.ini\" sind ungültig! Benutze standart Koordinaten."
     },
     {
       "Key": "gotUpToDateVersion",
@@ -312,7 +320,7 @@
     },
     {
       "Key": "PokeballsToKeepIncorrect",
-      "Value": "TotalAmountOfPokebalsToKeep ist falsch konfiguriert. Die Zahl ist kleiner als 1."
+      "Value": "TotalAmountOfPokeballsToKeep ist falsch konfiguriert. Die Zahl ist kleiner als 1."
     },
     {
       "Key": "PotionsToKeepIncorrect",

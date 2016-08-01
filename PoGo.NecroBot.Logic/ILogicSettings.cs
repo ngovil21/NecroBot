@@ -122,13 +122,14 @@ namespace PoGo.NecroBot.Logic
         bool SnipeIgnoreUnknownIv { get; }
         int MinDelayBetweenSnipes { get; }
         double SnipingScanOffset { get; }
-        int TotalAmountOfPokebalsToKeep { get; }
+        int TotalAmountOfPokeballsToKeep { get; }
         int TotalAmountOfPotionsToKeep { get; }
         int TotalAmountOfRevivesToKeep { get; }
 
         bool ShowPokeballCountsBeforeRecycle { get; }
         bool VerboseRecycling { get; }
         double RecycleInventoryAtUsagePercentage { get; }
+        double EvolveKeptPokemonsAtStorageUsagePercentage { get; }
         ICollection<KeyValuePair<ItemId, int>> ItemRecycleFilter { get; }
 
         ICollection<PokemonId> PokemonsToEvolve { get; }

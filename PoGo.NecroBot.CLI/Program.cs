@@ -10,6 +10,7 @@ using PoGo.NecroBot.Logic.Logging;
 using PoGo.NecroBot.Logic.State;
 using PoGo.NecroBot.Logic.Tasks;
 using PoGo.NecroBot.Logic.Utils;
+using System.IO;
 
 #endregion
 
@@ -17,8 +18,15 @@ namespace PoGo.NecroBot.CLI
 {
     internal class Program
     {
+        static ManualResetEvent _quitEvent = new ManualResetEvent(false);
         private static void Main(string[] args)
         {
+            Console.SetWindowSize(165, 30);
+            Console.CancelKeyPress += (sender, eArgs) =>
+            {
+                _quitEvent.Set();
+                eArgs.Cancel = true;
+            };
             var culture = CultureInfo.CreateSpecificCulture("en-US");
 
             CultureInfo.DefaultThreadCurrentCulture = culture;
@@ -31,17 +39,16 @@ namespace PoGo.NecroBot.CLI
 
             var settings = GlobalSettings.Load(subPath);
 
-
             if (settings == null)
             {
                 Logger.Write("This is your first start and the bot has generated the default config!", LogLevel.Warning);
                 Logger.Write("Press a Key to continue...",
                     LogLevel.Warning);
                 Console.ReadKey();
+                return;
             }
             var session = new Session(new ClientSettings(settings), new LogicSettings(settings));
             session.Client.ApiFailure = new ApiFailureStrategy(session);
-
 
             /*SimpleSession session = new SimpleSession
             {
@@ -82,21 +89,25 @@ namespace PoGo.NecroBot.CLI
 
             session.Navigation.UpdatePositionEvent +=
                 (lat, lng) => session.EventDispatcher.Send(new UpdatePositionEvent {Latitude = lat, Longitude = lng});
-
+            session.Navigation.UpdatePositionEvent += Navigation_UpdatePositionEvent;
             machine.AsyncStart(new VersionCheckState(), session);
             if (session.LogicSettings.UseSnipeLocationServer)
                 SnipePokemonTask.AsyncStart(session);
 
-            //Non-blocking key reader
-            //This will allow to process console key presses in another code parts
-            while (true)
-            {
-                if (Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Enter)
-                {
-                    break;
-                }
-                Thread.Sleep(5);
-            }
+            _quitEvent.WaitOne();
+        }
+
+        private static void Navigation_UpdatePositionEvent(double lat, double lng)
+        {
+            SaveLocationToDisk(lat, lng);
+        }
+
+        private static void SaveLocationToDisk(double lat, double lng)
+        {
+            var coordsPath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Config" +
+                             Path.DirectorySeparatorChar + "LastPos.ini";
+
+            File.WriteAllText(coordsPath, $"{lat}:{lng}");
         }
     }
 }
